@@ -1,0 +1,4 @@
+### génération de la clé publique et privée
+
+openssl ecparam -genkey -name prime192v3 -out sk.pem
+openssl ec -in sk.pem -pubout -out pk.pem
