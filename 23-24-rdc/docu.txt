@@ -1,0 +1,121 @@
+Gaming Tokens
+-------------
+Un "gaming token" est constitué de trois champs :
+- Le nom de l'utilisateur
+- Deux chaines X, Y de 16 octets
+- Une signature des deux champs précédents par le distributeur
+
+Pour être valide, un "gaming token" doit :
+- Avoir une signature valide
+- Avoir le bon nom d'utilisateur
+- Il doit exister une clef K de 128 bits telle que :
+  - X est le chiffré de 0x00000000000000000000000000000000 par l'AES avec K
+  - Y est le chiffré de 0xffffffffffffffffffffffffffffffff par l'AES avec K
+
+La clef K doit rester confidentielle --- l'utilisateur n'a pas à la révéler.
+
+
+Distributeur de Gaming Tokens
+-----------------------------
+Le distributeur permet aux utilisateurs d'obtenir un Gaming Token sur
+présentation de leur carte d'étudiant.  Le distributeur certifie que les
+Gaming Tokens sont valides avec forte probabilité, alors que les clefs
+restent confidentielles.  Ceci est réalisé grace à une procédure de 
+"cut-and-choose".  Celle qui est implantée sur le campus est relativement
+classique ; elle garantit que les Gaming Tokens obtenus sont corrects avec
+probabilité supérieure à 99,9%.  Elle incorpore une optimisation commune :
+l'utilisation d'un ``arbre de de PRNGs'' pour réduire les communication de 
+O(n) à O(log n).
+
+Le protocole pour obtenir un "Gaming Token" se déroule en trois phases :
+    
+1. Mise en Gage
+   ### L'utilisateur génère 1024 paires aléatoires K[0], ..., K[1023] avec un 
+   ### "arbre de PRNGs" puis il les met en gage
+   - L'utilisateur choisit une graine <seed>
+   - A[1] <--- <seed>
+   - Pour 1 <= i < 1024 faire:
+     - A[2*i] <--- SHA256(A[i])[0:16]
+     - A[2*i + 1] <--- SHA256(A[i])[16:32]
+   - Pour 0 <= i < 1024 faire:
+     - K[i] <--- A[i + 1024]
+     - X[i] <--- AES(K[i], 0x00000000000000000000000000000000)
+     - Y[i] <--- AES(K[i], 0xffffffffffffffffffffffffffffffff)
+   - Commitment <--- SHA256(X[0] || Y[0] || X[1] || Y[1] || ...)
+                     # empreinte de la concaténation de toute les paires
+   - <commitment> est transmis au distributeur
+
+2. Défi
+   ### Le distributeur choisit UNE paire i (0 <= i < 1024)
+
+3. Ouverture
+   ### L'utilisateur révèle X[i] et Y[i] ainsi que K[j] pour j != i.
+   ### Le distributeur vérifie la correction de X[j] et Y[j] (pour j!= i).
+   ### Pour cela, l'utilisateur révèle le "co-chemin" qui va de la i-ème paire 
+   ###   jusqu'à la racine dans l'arbre de PRNGs.  Ceci permet de vérifieur de
+   ###   recalculer tous les K[j] pour j != i.
+   - X[i] et Y[i] sont transmis au distributeur
+   - path <--- []
+   - j <--- i + 1024
+   - Pour 0 <= k < 10:
+     - Ajouter A[j XOR 1] à la fin de path
+     - j <--- j // 2 
+   - Transmettre <path> au distributeur
+
+EXEMPLE
+-------
+
+Avec :
+
+<seed> = 00112233445566778899aabbccddeeff
+
+On obtient :
+
+A[   1] = 00112233445566778899aabbccddeeff
+A[   2] = a8faed6abbf35c12a4b26e40f6feb19d
+A[   3] = 736d90045c83b9f9a31f638d323e6811
+A[   4] = 3c1acfd8750755dc39c3ed988bec2af9
+A[   5] = 01babca312bbe3227fb2d5888cfe1d37
+A[   6] = 34cfff2978a6636bb4c09f12e83a0dc6
+A[   7] = 5483165ca3819e14ce80b9d2b5e57ba1
+A[   8] = 22e971e1c044854462c40d604937a3bd
+A[   9] = f6fbec857082fd37300df9abebf8724a
+A[  10] = eab3e41cab29c0ce5e2ccc8999d937b9
+...
+A[2044] = cbaaf237dbc50e2d7da9ca86d131bfb9
+A[2045] = 6e77f0dfa843c65772424341ad5efd35
+A[2046] = 5df411bb7fe356cc4dc1ba2e015f4145
+A[2047] = 43607a1c4fa2321cf1e53e951be06eaa
+
+K[   0] = 82b1b3e46a145d137dc78cdd2e6a897b
+X[   0] = 2453edeba9fbe3095b07f1d33fa631d4
+Y[   0] = 3070eaddba8604bd1527a718a8160057
+...
+K[  42] = 21ae7ef7dbe8564633c3cb6fda2ae176
+X[  42] = b48bf89eca0365dfe2dcc8567f44bcc2
+Y[  42] = 1bddf510f4008e9da4bd0db34897bf0e
+...
+K[1023] = 43607a1c4fa2321cf1e53e951be06eaa
+X[1023] = d69c93ce5224175e19fe0d8d0c759549
+Y[1023] = afece0e4b45cd0f7f8853ed5ebcf1cc4
+
+Les données qui sont hachées pour produire la mise en gage occupent 32768 octets :
+
+2453edeba9fbe3095b07f1d33fa631d4 3070eaddba8604bd1527a718a8160057
+3fb55b29afac62d477daff0e50d14366 48ecedf0257de354254e0842de6979a1
+...
+d69c93ce5224175e19fe0d8d0c759549 afece0e4b45cd0f7f8853ed5ebcf1cc4
+
+Et donc
+
+<commitment> = 6fb39c6d7d6c27375e4a23b3ae49925a08ce5047ce75cfc70cfab836f8c12f74
+
+Le ``challenge'' est <i> = 42.
+
+Ouvrir la mise en gage revient à révéler X[42], Y[42], ainsi que le ``co-chemin'' 
+depuis la feuille correspondante de l'arbre de PRNG jusqu'à la racine.  Dans 
+notre exemple, la feuille en question de l'arbre de PRNG porte le numéro 1066.
+Le chemin qui la relie à la racine est : A[i] pour  i = 1066, 533, 266, 133, 66, 
+33, 16, 8, 4, 2.  Donc le ``co-chemin'' (la séquence formée par le frère de 
+chacun des noeuds précédents) est A[j] avec j = 1067, 532, 267, 132, 67, 32, 17,
+9, 5, 3.
