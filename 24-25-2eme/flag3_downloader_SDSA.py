@@ -5,7 +5,7 @@ from Crypto.Util.number import bytes_to_long
 from asn1crypto.core import Sequence, Integer
 import hashlib
 
-# Extraire la clé publique pour récupérer les paramètres p, q, g
+# Extraction de la clé publique pour récupérer les paramètres p, q, g
 f = open("MOHAB_pk.pem", "r")
 key = DSA.import_key(f.read())
 p = key.p
@@ -13,19 +13,17 @@ q = key.q
 g = key.g
 f.close()
 
-# Données des signatures des anciens emails
-signature1 = "3045022100CCAD8AF15EAC3FBC134442440776F60774CBED4C2B8E13E3EC838CA6D667DA2A022100ED9E124FBEFBC3A9E9B6AE0EB0BD676CA5513AA9D1939C3AE1C2234FA34E16B9"
-signature2 = "3045022100BCAB8AC845751C356E9005CA1D2EF6257C08CCDBE7AD88E3A8320090C924FCBC022100E65A30B0E4C18C429E9FF326C78EFE007EE6101D1D9857579D9D7FAE79343514"
+# Signatures des anciens emails (correctes)
+signature1 = "3046022100CCAD8AF15EAC3FBC134442440776F60774CBED4C2B8E13E3EC838CA6D667DA2A022100ED9E124FBEFBC3A9E9B6AE0EB0BD676CA5513AA9D1939C3AE1C2234FA34E16B9"
+signature2 = "3046022100BCAB8AC845751C356E9005CA1D2EF6257C08CCDBE7AD88E3A8320090C924FCBC022100E65A30B0E4C18C429E9FF326C78EFE007EE6101D1D9857579D9D7FAE79343514"
 
 # Message à signer pour le nouveau challenge
-message = "baric cream began facie ebony"
+message = "sprat eater julep welch vower"
 
-# Extraction des parties c1, s1 et c2, s2 à partir des signatures
+# Fonction pour extraire c et s à partir des signatures
 def extract_signature_parts(signature):
-    c = signature[10:74]
-    s = signature[76:]
-    print(f"c: {c}")
-    print(f"s: {s}\n")
+    c = signature[10:74]  # c commence après le préfixe DER (3046...0221)
+    s = signature[76:]    # s commence après la deuxième 0221
     return int(c, 16), int(s, 16)
 
 c1, s1 = extract_signature_parts(signature1)
@@ -41,9 +39,6 @@ inv_delta_c = mod_inverse(delta_c, q)
 # Calcul de la clé secrète x
 x = (delta_s * inv_delta_c) % q
 print(f"Clé secrète x: {hex(x)}")
-
-
-### Signature
 
 # Étape 1: Choisir un nonce k aléatoire
 k = random.randint(1, q-1)
