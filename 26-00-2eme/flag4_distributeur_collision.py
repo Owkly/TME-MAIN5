@@ -1,52 +1,53 @@
 import hashlib
-import numpy as np
-from ast import literal_eval
+
+nom = b"Ryann"
+x = b'1234'
+
+def hash(x):
+    return hashlib.sha256(nom + x).digest()[:7]
 
 
-def f(x):
-    return (hashlib.sha256(name+(x)).digest()[:7])
-
-
-def brent(f, x0):
-    power = lam = 1
-    tortoise = x0
-    hare = f(x0)
-    while tortoise != hare:
-        if power == lam:
-            tortoise = hare
+def algo_brent(hash, x):
+    power = periode = 1
+    slow = x
+    fast = hash(x)
+    while slow != fast:
+        if power == periode:
+            slow = fast
             power *= 2
-            lam = 0
-        hare = f(hare)
-        lam += 1
+            periode = 0
+        fast = hash(fast)
+        periode += 1
 
-    tortoise = hare = x0
-    for i in range(lam):
-        hare = f(hare)
+    slow = fast = x
+    for i in range(periode):
+        fast = hash(fast)
 
-    mu = 0
-    while tortoise != hare:
-        tortoise = f(tortoise)
-        hare = f(hare)
-        mu += 1
+    decalage = 0
+    while slow != fast:
+        slow = hash(slow)
+        fast = hash(fast)
+        decalage += 1
 
-    return lam, mu
+    return periode, decalage
 
+periode, decalage = algo_brent(hash, x)
 
-name = b"Ryann"
-x = b'5'
-l, m = brent(f, x)
-for i in range(m-1):
-    x = f(x)
+# Calcul de la première clef
+for i in range(decalage - 1):
+    x = hash(x)
 x1 = x
-for i in range(l):
-    x = f(x)
+
+# Calcul de la deuxième clef
+for i in range(periode):
+    x = hash(x)
 x2 = x
 
 # Affichage des résultats
 print("Vérification des hachages:")
-print(hashlib.sha256(name + x1).hexdigest())
-print(hashlib.sha256(name + x2).hexdigest())
+print(hashlib.sha256(nom + x1).hexdigest())
+print(hashlib.sha256(nom + x2).hexdigest())
 
-print("\nLes deux clef sont:")
-print((name + x1).hex())
-print((name + x2).hex())
+print("\nLes deux clefs sont :")
+print(f"Clef 1 : {(nom + x1).hex()}")
+print(f"Clef 2 : {(nom + x2).hex()}")
