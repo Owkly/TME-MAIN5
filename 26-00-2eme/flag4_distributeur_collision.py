@@ -1,53 +1,52 @@
 import hashlib
 
 nom = b"Ryann"
-x = b'1234'
+valeur_initiale = b'1234'
 
-def hash(x):
-    return hashlib.sha256(nom + x).digest()[:7]
+def fonction_hachage(valeur):
+    return hashlib.sha256(nom + valeur).digest()[:7]
 
+def algo_brent(fonction_hachage, valeur_initiale):
+    puissance = longueur_cycle = 1
+    valeur_lente = valeur_initiale
+    valeur_rapide = fonction_hachage(valeur_initiale)
+    while valeur_lente != valeur_rapide:
+        if puissance == longueur_cycle:
+            valeur_lente = valeur_rapide
+            puissance *= 2
+            longueur_cycle = 0
+        valeur_rapide = fonction_hachage(valeur_rapide)
+        longueur_cycle += 1
 
-def algo_brent(hash, x):
-    power = periode = 1
-    slow = x
-    fast = hash(x)
-    while slow != fast:
-        if power == periode:
-            slow = fast
-            power *= 2
-            periode = 0
-        fast = hash(fast)
-        periode += 1
+    valeur_lente = valeur_rapide = valeur_initiale
+    for i in range(longueur_cycle):
+        valeur_rapide = fonction_hachage(valeur_rapide)
 
-    slow = fast = x
-    for i in range(periode):
-        fast = hash(fast)
+    position_debut_cycle = 0
+    while valeur_lente != valeur_rapide:
+        valeur_lente = fonction_hachage(valeur_lente)
+        valeur_rapide = fonction_hachage(valeur_rapide)
+        position_debut_cycle += 1
 
-    decalage = 0
-    while slow != fast:
-        slow = hash(slow)
-        fast = hash(fast)
-        decalage += 1
+    return longueur_cycle, position_debut_cycle
 
-    return periode, decalage
+longueur_cycle, position_debut_cycle = algo_brent(fonction_hachage, valeur_initiale)
 
-periode, decalage = algo_brent(hash, x)
+# Calcul du premier point de collision
+for i in range(position_debut_cycle - 1):
+    valeur_initiale = fonction_hachage(valeur_initiale)
+point_de_collision_1 = valeur_initiale
 
-# Calcul de la première clef
-for i in range(decalage - 1):
-    x = hash(x)
-x1 = x
-
-# Calcul de la deuxième clef
-for i in range(periode):
-    x = hash(x)
-x2 = x
+# Calcul du second point de collision
+for i in range(longueur_cycle):
+    valeur_initiale = fonction_hachage(valeur_initiale)
+point_de_collision_2 = valeur_initiale
 
 # Affichage des résultats
 print("Vérification des hachages:")
-print(hashlib.sha256(nom + x1).hexdigest())
-print(hashlib.sha256(nom + x2).hexdigest())
+print(hashlib.sha256(nom + point_de_collision_1).hexdigest())
+print(hashlib.sha256(nom + point_de_collision_2).hexdigest())
 
-print("\nLes deux clefs sont :")
-print(f"Clef 1 : {(nom + x1).hex()}")
-print(f"Clef 2 : {(nom + x2).hex()}")
+print("\nLes deux points de collision sont :")
+print(f"Point de collision 1 : {(nom + point_de_collision_1).hex()}")
+print(f"Point de collision 2 : {(nom + point_de_collision_2).hex()}")

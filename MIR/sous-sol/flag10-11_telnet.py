@@ -23,6 +23,7 @@ import shutil
 import struct
 import tty
 import termios
+import time
 import signal
 import zlib
 import platform
@@ -74,6 +75,7 @@ PLUGIN_CODE = bytes([1])
 TTYPE = bytes([24])
 TTYPE_IS = bytes([0])
 TTYPE_SEND = bytes([1])
+
 
 
 
@@ -201,14 +203,25 @@ class ServiceDiscovery(Plugin):
             print(description)
             print()
 
-class Test(Plugin):
+class Free(Plugin):
     """
-    Classe Test pour appeler 'service.free_point' et afficher 's'il vous plaît'
+    Classe Test pour appeler 'service.free_point'
     """
     async def main(self):
         print("Appel du service 'service.free_point'")
         result = await self.rpc("service.free_point", questcequondit="s'il vous plait")
         print(result)
+
+class Extra(Plugin):
+    """
+    Classe Test pour appeler 'service.extra_free_point' avec la chaîne magique spécifique
+    """
+    async def main(self):
+        print("Appel du service 'service.extra_free_point' avec la chaîne magique spécifique")
+        result_extra_free_point = await self.rpc("service.extra_free_point", magic_string="!QML GRAL2@R  ")
+        print(result_extra_free_point)
+
+
 
 
 
@@ -261,6 +274,15 @@ class TelnetClient(TelnetProtocol):
         self.console_transport = console_protocol.transport
         
         # here is a good place to start a programmatic interaction with the server.
+        time.sleep(0.5)
+        self.transport.write(b'ascenseur\n')
+        time.sleep(0.5)
+        self.transport.write(b'\n')
+        self.transport.write(b'\n')
+        self.transport.write(b'technique\n')
+        self.transport.write(b'automate\n')
+        self.transport.write(b'1\n')
+        self.transport.write(b'Yannick\n')
         return
 
     def dataReceived(self, data):
