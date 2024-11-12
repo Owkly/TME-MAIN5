@@ -1,0 +1,31 @@
+>>> conseil baka
+Avez-vous lu sa spécification dans la bibliothèque ?
+
+>>> conseil baka
+Pour exécuter le protocole normalement, il faudrait que vous possédiez le nombre
+``secret'' J**d mod N, qui donne le droit d'entrer... or clairement ce n'est pas
+le cas.
+
+>>> conseil baka
+Heureusement, la serrure contient une implantation buguée du protocole.  On peut
+la tromper et la convaincre d'ouvrir même sans posséder le ``secret''.
+
+>>> conseil baka
+Essayez de lancer plusieurs sessions et observez le ``défi'' aléatoire envoyé par
+la serrure.
+
+>>> conseil baka
+Si par malheur le ``défi'' n'était pas aléatoire mais, au contraire, prévisible,
+alors ne pourrait-il pas y avoir un moyen simple de fabriquer une paire (x, y) qui
+satisfait l'égalitée testée par le vérifieur ?
+
+>>> conseil baka
+(Moi, je dis ça, hein, je dis rien...)
+
+>>> conseil baka
+En principe, on ne devrait pas pouvoir faire ça, et le protocole est censé être
+sûr s'il est implanté correctement.  Mais là, vu que le ``défi'' est prévisible,
+on peut mettre en oeuvre cette entourloupe.
+
+>>> conseil baka
+C'est tout !
